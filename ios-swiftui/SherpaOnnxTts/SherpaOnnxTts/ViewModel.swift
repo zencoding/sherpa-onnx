@@ -93,6 +93,27 @@ func getTtsFor_en_US_amy_low() -> SherpaOnnxOfflineTtsWrapper {
   return SherpaOnnxOfflineTtsWrapper(config: &config)
 }
 
+// https://k2-fsa.github.io/sherpa/onnx/tts/all/Hindi/vits-piper-hi_IN-pratham-medium.html
+func getTtsFor_hi_IN_pratham_medium() -> SherpaOnnxOfflineTtsWrapper {
+  // please see  https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-hi_IN-pratham-medium.tar.bz2
+
+  let model = getResource("hi_IN-pratham-medium", "onnx")
+
+  // tokens.txt
+  let tokens = getResource("tokens", "txt")
+
+  // in this case, we don't need lexicon.txt
+  let dataDir = resourceURL(to: "espeak-ng-data")
+
+  let vits = sherpaOnnxOfflineTtsVitsModelConfig(
+    model: model, lexicon: "", tokens: tokens, dataDir: dataDir)
+  let modelConfig = sherpaOnnxOfflineTtsModelConfig(vits: vits)
+  var config = sherpaOnnxOfflineTtsConfig(model: modelConfig)
+
+  return SherpaOnnxOfflineTtsWrapper(config: &config)
+}
+
+
 // https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/vits.html#vits-melo-tts-zh-en-chinese-english-1-speaker
 func getTtsFor_zh_en_melo_tts() -> SherpaOnnxOfflineTtsWrapper {
   // please see https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-melo-tts-zh_en.tar.bz2
@@ -214,10 +235,11 @@ func getTtsFor_kokoro_multi_lang_v1_0() -> SherpaOnnxOfflineTtsWrapper {
 func createOfflineTts() -> SherpaOnnxOfflineTtsWrapper {
   // Please enable only one of them
 
-  return getTtsFor_kokoro_multi_lang_v1_0()
+  //return getTtsFor_kokoro_multi_lang_v1_0()
 
-  // return getTtsFor_kokoro_en_v0_19()
-
+  return getTtsFor_kokoro_en_v0_19()
+    
+   //return getTtsFor_hi_IN_pratham_medium()
   // return getTtsFor_matcha_icefall_zh_baker()
 
   // return getTtsFor_en_US_amy_low()
@@ -227,6 +249,7 @@ func createOfflineTts() -> SherpaOnnxOfflineTtsWrapper {
   // return getTtsForAishell3()
 
   // return getTtsFor_zh_en_melo_tts()
+  
 
   // please add more models on need by following the above two examples
 }

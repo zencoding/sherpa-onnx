@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		B748E3552E7DDD6600F0BE96 /* model.onnx in Resources */ = {isa = PBXBuildFile; fileRef = B748E3512E7DDD6600F0BE96 /* model.onnx */; };
+		B748E3562E7DDD6600F0BE96 /* voices.bin in Resources */ = {isa = PBXBuildFile; fileRef = B748E3522E7DDD6600F0BE96 /* voices.bin */; };
+		B748E3572E7DDD6600F0BE96 /* espeak-ng-data in Resources */ = {isa = PBXBuildFile; fileRef = B748E3532E7DDD6600F0BE96 /* espeak-ng-data */; };
+		B748E3582E7DDD6600F0BE96 /* tokens.txt in Resources */ = {isa = PBXBuildFile; fileRef = B748E3542E7DDD6600F0BE96 /* tokens.txt */; };
 		C917B4E52B0EEF3B005245AC /* SherpaOnnxTtsApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C917B4E42B0EEF3B005245AC /* SherpaOnnxTtsApp.swift */; };
 		C917B4E72B0EEF3B005245AC /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C917B4E62B0EEF3B005245AC /* ContentView.swift */; };
 		C917B4E92B0EEF3C005245AC /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C917B4E82B0EEF3C005245AC /* Assets.xcassets */; };
@@ -18,6 +22,10 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		B748E3512E7DDD6600F0BE96 /* model.onnx */ = {isa = PBXFileReference; lastKnownFileType = text; name = model.onnx; path = "kokoro-en-v0_19/model.onnx"; sourceTree = "<group>"; };
+		B748E3522E7DDD6600F0BE96 /* voices.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; name = voices.bin; path = "kokoro-en-v0_19/voices.bin"; sourceTree = "<group>"; };
+		B748E3532E7DDD6600F0BE96 /* espeak-ng-data */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "espeak-ng-data"; path = "kokoro-en-v0_19/espeak-ng-data"; sourceTree = "<group>"; };
+		B748E3542E7DDD6600F0BE96 /* tokens.txt */ = {isa = PBXFileReference; lastKnownFileType = text; name = tokens.txt; path = "kokoro-en-v0_19/tokens.txt"; sourceTree = "<group>"; };
 		C917B4E12B0EEF3B005245AC /* SherpaOnnxTts.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SherpaOnnxTts.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C917B4E42B0EEF3B005245AC /* SherpaOnnxTtsApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SherpaOnnxTtsApp.swift; sourceTree = "<group>"; };
 		C917B4E62B0EEF3B005245AC /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -45,6 +53,10 @@
 		C917B4D82B0EEF3B005245AC = {
 			isa = PBXGroup;
 			children = (
+				B748E3532E7DDD6600F0BE96 /* espeak-ng-data */,
+				B748E3512E7DDD6600F0BE96 /* model.onnx */,
+				B748E3542E7DDD6600F0BE96 /* tokens.txt */,
+				B748E3522E7DDD6600F0BE96 /* voices.bin */,
 				C917B4E32B0EEF3B005245AC /* SherpaOnnxTts */,
 				C917B4E22B0EEF3B005245AC /* Products */,
 				C9FE9FE82B0F3754009F1003 /* Frameworks */,
@@ -147,6 +159,10 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B748E3552E7DDD6600F0BE96 /* model.onnx in Resources */,
+				B748E3562E7DDD6600F0BE96 /* voices.bin in Resources */,
+				B748E3572E7DDD6600F0BE96 /* espeak-ng-data in Resources */,
+				B748E3582E7DDD6600F0BE96 /* tokens.txt in Resources */,
 				C917B4EC2B0EEF3C005245AC /* Preview Assets.xcassets in Resources */,
 				C917B4E92B0EEF3C005245AC /* Assets.xcassets in Resources */,
 			);
