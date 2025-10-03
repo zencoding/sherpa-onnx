@@ -156,3 +156,9 @@ am.mvn
 *bpe.model
 config.yaml
 configuration.json
+
+# Large files (>100MB)
+sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/
+build-ios/ios-onnxruntime/
+kokoro-multi-lang-v1_0/
+kokoro-en-v0_19/

@@ -65,8 +65,30 @@ class ViewController: UIViewController {
 
         resultLabel.text = "ASR with Next-gen Kaldi\n\nSee https://github.com/k2-fsa/sherpa-onnx\n\nPress the Start button to run!"
         recordBtn.setTitle("Start", for: .normal)
+
+        setupAudioSession()
         initRecognizer()
         initRecorder()
+    }
+
+    func setupAudioSession() {
+        do {
+            let audioSession = AVAudioSession.sharedInstance()
+            try audioSession.setCategory(.record, mode: .measurement, options: .duckOthers)
+            try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
+
+            // Request microphone permission
+            audioSession.requestRecordPermission { granted in
+                DispatchQueue.main.async {
+                    if !granted {
+                        print("Microphone permission denied")
+                        self.resultLabel.text = "Microphone permission required"
+                    }
+                }
+            }
+        } catch {
+            print("Failed to setup audio session: \(error)")
+        }
     }
 
     @IBAction func onRecordBtnClick(_ sender: UIButton) {
@@ -110,19 +132,36 @@ class ViewController: UIViewController {
     func initRecorder() {
         print("init recorder")
         audioEngine = AVAudioEngine()
-        let inputNode = self.audioEngine?.inputNode
+        guard let inputNode = self.audioEngine?.inputNode else {
+            print("Failed to get input node")
+            return
+        }
+
         let bus = 0
-        let inputFormat = inputNode?.outputFormat(forBus: bus)
-        let outputFormat = AVAudioFormat(
+        let inputFormat = inputNode.outputFormat(forBus: bus)
+
+        print("Input format: \(inputFormat)")
+        print("Sample rate: \(inputFormat.sampleRate), channels: \(inputFormat.channelCount)")
+
+        // Create a compatible output format using the input format's properties
+        guard let outputFormat = AVAudioFormat(
             commonFormat: .pcmFormatFloat32,
-            sampleRate: 16000, channels: 1,
-            interleaved: false)!
+            sampleRate: 16000,
+            channels: 1,
+            interleaved: false) else {
+            print("Failed to create output audio format")
+            return
+        }
 
-        let converter = AVAudioConverter(from: inputFormat!, to: outputFormat)!
+        guard let converter = AVAudioConverter(from: inputFormat, to: outputFormat) else {
+            print("Failed to create audio converter from \(inputFormat) to \(outputFormat)")
+            return
+        }
 
-        inputNode!.installTap(
+        // Use a smaller buffer size and the input format for the tap
+        inputNode.installTap(
             onBus: bus,
-            bufferSize: 1024,
+            bufferSize: 512,
             format: inputFormat
         ) {
             (buffer: AVAudioPCMBuffer, when: AVAudioTime) in

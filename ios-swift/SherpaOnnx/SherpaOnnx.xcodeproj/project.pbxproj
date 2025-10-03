@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		B7A943AC2E7CD484002DE6F7 /* encoder-epoch-99-avg-1.onnx in Resources */ = {isa = PBXBuildFile; fileRef = B7A943AA2E7CD484002DE6F7 /* encoder-epoch-99-avg-1.onnx */; };
+		B7A943AD2E7CD484002DE6F7 /* joiner-epoch-99-avg-1.onnx in Resources */ = {isa = PBXBuildFile; fileRef = B7A943AB2E7CD484002DE6F7 /* joiner-epoch-99-avg-1.onnx */; };
+		B7A943AE2E7CD484002DE6F7 /* decoder-epoch-99-avg-1.onnx in Resources */ = {isa = PBXBuildFile; fileRef = B7A943A92E7CD484002DE6F7 /* decoder-epoch-99-avg-1.onnx */; };
+		B7A943B42E7CD4BE002DE6F7 /* tokens.txt in Resources */ = {isa = PBXBuildFile; fileRef = B7A943B12E7CD4BE002DE6F7 /* tokens.txt */; };
 		C93989AE2A89FE13009AB859 /* sherpa-onnx.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = C984A81B29AA11C500D74C52 /* sherpa-onnx.xcframework */; };
 		C984A7E829A9EEB700D74C52 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C984A7E729A9EEB700D74C52 /* AppDelegate.swift */; };
 		C984A7EA29A9EEB700D74C52 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C984A7E929A9EEB700D74C52 /* SceneDelegate.swift */; };
@@ -40,6 +44,10 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		B7A943A92E7CD484002DE6F7 /* decoder-epoch-99-avg-1.onnx */ = {isa = PBXFileReference; lastKnownFileType = file; path = "decoder-epoch-99-avg-1.onnx"; sourceTree = "<group>"; };
+		B7A943AA2E7CD484002DE6F7 /* encoder-epoch-99-avg-1.onnx */ = {isa = PBXFileReference; lastKnownFileType = file; path = "encoder-epoch-99-avg-1.onnx"; sourceTree = "<group>"; };
+		B7A943AB2E7CD484002DE6F7 /* joiner-epoch-99-avg-1.onnx */ = {isa = PBXFileReference; lastKnownFileType = file; path = "joiner-epoch-99-avg-1.onnx"; sourceTree = "<group>"; };
+		B7A943B12E7CD4BE002DE6F7 /* tokens.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = tokens.txt; sourceTree = "<group>"; };
 		C984A7E429A9EEB700D74C52 /* SherpaOnnx.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SherpaOnnx.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C984A7E729A9EEB700D74C52 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		C984A7E929A9EEB700D74C52 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -90,6 +98,10 @@
 		C984A7DB29A9EEB700D74C52 = {
 			isa = PBXGroup;
 			children = (
+				B7A943B12E7CD4BE002DE6F7 /* tokens.txt */,
+				B7A943A92E7CD484002DE6F7 /* decoder-epoch-99-avg-1.onnx */,
+				B7A943AA2E7CD484002DE6F7 /* encoder-epoch-99-avg-1.onnx */,
+				B7A943AB2E7CD484002DE6F7 /* joiner-epoch-99-avg-1.onnx */,
 				C984A7E629A9EEB700D74C52 /* SherpaOnnx */,
 				C984A7FD29A9EEBA00D74C52 /* SherpaOnnxTests */,
 				C984A80729A9EEBA00D74C52 /* SherpaOnnxUITests */,
@@ -255,8 +267,12 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B7A943AC2E7CD484002DE6F7 /* encoder-epoch-99-avg-1.onnx in Resources */,
+				B7A943AD2E7CD484002DE6F7 /* joiner-epoch-99-avg-1.onnx in Resources */,
+				B7A943AE2E7CD484002DE6F7 /* decoder-epoch-99-avg-1.onnx in Resources */,
 				C984A82829AA196100D74C52 /* Main.storyboard in Resources */,
 				C984A7F429A9EEB900D74C52 /* LaunchScreen.storyboard in Resources */,
+				B7A943B42E7CD4BE002DE6F7 /* tokens.txt in Resources */,
 				C984A7F129A9EEB900D74C52 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
