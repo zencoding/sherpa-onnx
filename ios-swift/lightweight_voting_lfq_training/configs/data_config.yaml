@@ -1,0 +1,290 @@
+# Data Configuration for Lightweight Voting-LFQ Training
+# Dataset paths, preprocessing, and augmentation settings
+
+# Data Paths
+data:
+  # Root directory for datasets (can be overridden)
+  data_root: ./data
+
+  # Cache directory for preprocessed features
+  cache_dir: ./cache
+
+  # Pre-trained model directory
+  pretrained_dir: ./pretrained_models
+
+  # Zipformer checkpoint
+  zipformer_checkpoint: pretrained_models/zipformer_bilingual
+
+# Dataset Configuration
+datasets:
+  # LibriSpeech configuration
+  librispeech:
+    # HuggingFace dataset name
+    hf_dataset: facebook/librispeech_asr
+
+    # Splits to use for training (Tier 1)
+    tier1_splits:
+      - train.clean.100  # 100 hours, clean speech
+
+    # Splits to use for training (Tier 2)
+    tier2_splits:
+      - train.clean.100  # 100 hours
+      - train.clean.360  # 360 hours
+      - train.other.500  # 500 hours
+    # Total Tier 2: 960 hours
+
+    # Validation split
+    val_split: validation.clean
+
+    # Test split (for final evaluation)
+    test_split: test.clean
+
+    # Sampling weight (for multi-dataset training)
+    weight: 1.0
+
+  # Common Voice configuration
+  common_voice:
+    # HuggingFace dataset name
+    hf_dataset: mozilla-foundation/common_voice_11_0
+
+    # Language
+    language: en
+
+    # Splits to use
+    tier1_splits: []  # Not used in Tier 1
+
+    tier2_splits:
+      - train  # ~500 hours after filtering
+
+    val_split: validation
+    test_split: test
+
+    # Sampling weight
+    weight: 0.5  # Lower weight due to quality variance
+
+    # Common Voice specific filters
+    min_duration: 1.0  # Seconds (filter out very short clips)
+    max_duration: 20.0  # Seconds (filter out very long clips)
+    min_up_votes: 2  # Minimum up votes for quality
+    max_down_votes: 0  # Maximum down votes allowed
+
+# Audio Preprocessing
+audio:
+  # Target sample rate (Zipformer expects 16kHz)
+  sample_rate: 16000
+
+  # Mono conversion
+  force_mono: true
+
+  # Normalization
+  normalize: true  # Normalize audio amplitude to [-1, 1]
+  target_db: -20  # Target loudness in dB
+
+  # Trim silence (removes leading/trailing silence)
+  trim_silence: true
+  trim_top_db: 30  # Threshold for silence detection
+
+  # Max audio duration (seconds, longer clips are skipped)
+  max_duration: 30.0
+
+  # Min audio duration (seconds, shorter clips are skipped)
+  min_duration: 0.5
+
+# Mel Spectrogram Configuration (for TTS validation)
+mel_spectrogram:
+  # Number of mel bins
+  n_mels: 80
+
+  # FFT parameters
+  n_fft: 1024
+  hop_length: 256  # 16ms at 16kHz
+  win_length: 1024  # 64ms at 16kHz
+
+  # Frequency range
+  fmin: 0
+  fmax: 8000  # Half of 16kHz
+
+  # Mel scale
+  mel_scale: htk  # Options: htk, slaney
+
+  # Normalization
+  normalize: true
+
+# Data Augmentation
+augmentation:
+  # Overall augmentation probability (0.0 = disabled)
+  enabled: true
+
+  # Training phase-based augmentation (progressive difficulty)
+  # Epochs 1-10: clean_only
+  # Epochs 11-30: light augmentation (30% samples)
+  # Epochs 31-50: medium augmentation (50% samples)
+  schedule:
+    clean_only_epochs: 10
+    light_aug_epochs: 20  # Epochs 11-30
+    medium_aug_epochs: 20  # Epochs 31-50
+
+  # Noise augmentation
+  noise:
+    # Noise types and probabilities
+    types:
+      gaussian: 0.25  # White noise
+      pink: 0.25      # Pink noise (1/f)
+      brown: 0.25     # Brown noise (1/f²)
+      babble: 0.25    # Babble noise (not implemented in Tier 1)
+
+    # SNR range (signal-to-noise ratio in dB)
+    snr_db_range: [10, 30]  # Lower SNR = more noise
+
+    # Probability of applying noise (during augmented epochs)
+    probability: 0.5  # 50% of samples get noise
+
+  # Speed perturbation
+  speed_perturbation:
+    enabled: true
+    probability: 0.3  # 30% of samples
+    speed_range: [0.9, 1.1]  # 0.9x to 1.1x speed
+
+  # Pitch shift (changes pitch without changing speed)
+  pitch_shift:
+    enabled: false  # Disabled by default (expensive)
+    probability: 0.2
+    semitone_range: [-2, 2]  # ±2 semitones
+
+  # Volume perturbation
+  volume_perturbation:
+    enabled: true
+    probability: 0.3
+    gain_db_range: [-3, 3]  # ±3 dB
+
+  # Time stretch (changes duration without changing pitch)
+  time_stretch:
+    enabled: false  # Disabled by default (expensive)
+    probability: 0.2
+    rate_range: [0.9, 1.1]
+
+  # Room simulation (reverb)
+  room_simulation:
+    enabled: false  # Disabled by default (expensive)
+    probability: 0.2
+    room_size_range: [0.1, 0.9]  # Small to large rooms
+
+# Data Loading
+data_loading:
+  # Shuffle training data
+  shuffle: true
+
+  # Drop last incomplete batch
+  drop_last: true
+
+  # Number of samples to prefetch (per worker)
+  prefetch_factor: 2
+
+  # Pin memory for faster GPU transfer
+  pin_memory: true
+
+  # Persistent workers (keep workers alive between epochs)
+  persistent_workers: true
+
+  # Maximum number of samples in memory
+  max_samples_in_memory: 10000
+
+# Feature Caching
+caching:
+  # Enable feature caching (speeds up training after first epoch)
+  enabled: true
+
+  # Cache directory
+  cache_dir: ./cache
+
+  # What to cache
+  cache_audio_features: true  # Zipformer encoder features
+  cache_mel_spectrograms: true  # Mel spectrograms for TTS loss
+
+  # Cache format
+  cache_format: numpy  # Options: numpy, pickle, hdf5
+
+  # Clear cache on start (useful if data changed)
+  clear_on_start: false
+
+# Transcript Processing
+transcript:
+  # Convert to lowercase
+  lowercase: true
+
+  # Remove punctuation
+  remove_punctuation: false  # Keep punctuation for now
+
+  # Normalize unicode
+  normalize_unicode: true
+
+  # Remove extra whitespace
+  normalize_whitespace: true
+
+  # Maximum transcript length (characters)
+  max_length: 500
+
+  # Minimum transcript length (characters)
+  min_length: 1
+
+# Multi-Dataset Sampling
+multi_dataset:
+  # Sampling strategy
+  sampling_strategy: weighted  # Options: weighted, round_robin, interleave
+
+  # Resample datasets to equal size
+  resample_equal: false
+
+  # Effective dataset sizes (for weighted sampling)
+  # weight * size determines sampling probability
+
+# Validation Data
+validation:
+  # Use fixed validation set (no shuffling)
+  shuffle: false
+
+  # Limit validation samples (null = use all)
+  max_samples: null  # Set to 1000 for faster validation during development
+
+  # Apply augmentation to validation
+  augment: false  # Never augment validation data
+
+# Test Data
+test:
+  # Shuffle test data
+  shuffle: false
+
+  # Max test samples
+  max_samples: null
+
+  # Apply augmentation to test
+  augment: false
+
+# Dataset Statistics (for reference, auto-computed)
+# Will be updated after first data loading
+stats:
+  librispeech_tier1:
+    num_samples: 28539
+    total_hours: 100.6
+    avg_duration: 12.7  # seconds
+    avg_transcript_length: 180  # characters
+
+  librispeech_tier2:
+    num_samples: 281241
+    total_hours: 960.3
+    avg_duration: 12.3
+    avg_transcript_length: 178
+
+  common_voice_tier2:
+    num_samples: ~492000  # After filtering
+    total_hours: ~500
+    avg_duration: 3.7
+    avg_transcript_length: 45
+
+# Notes:
+# - data_root can be set via environment variable: DATA_ROOT=/data
+# - HuggingFace datasets are automatically downloaded to ~/.cache/huggingface/
+# - Augmentation schedule is automatically applied based on current epoch
+# - Caching speeds up training significantly (first epoch slow, rest fast)
+# - For Tier 1: Only LibriSpeech clean-100 is used
+# - For Tier 2: LibriSpeech full + Common Voice subset

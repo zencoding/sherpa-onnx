@@ -1,0 +1,167 @@
+# Training Configuration for Lightweight Voting-LFQ
+# Main configuration file for training procedures
+
+# Model configuration (imported)
+model_config: configs/model_config.yaml
+
+# Data configuration (imported)
+data_config: configs/data_config.yaml
+
+# Training Parameters
+training:
+  # Basic training settings
+  num_epochs: 50  # Tier 1: 50, Tier 2: 100 (override with --num-epochs)
+  batch_size: 16  # Samples per GPU (reduce to 8 if OOM)
+  val_batch_size: 32  # Larger batch for faster validation
+
+  # Learning rate configuration
+  learning_rate: 1.0e-4  # Initial learning rate
+  lr_scheduler: cosine  # Options: cosine, linear, step, none
+  warmup_epochs: 5  # Linear warmup epochs
+  min_lr: 1.0e-6  # Minimum learning rate (for cosine schedule)
+
+  # Optimizer configuration
+  optimizer: adamw  # Options: adamw, adam, sgd
+  weight_decay: 0.01  # L2 regularization
+  betas: [0.9, 0.999]  # Adam/AdamW betas
+  eps: 1.0e-8  # Adam/AdamW epsilon
+
+  # Gradient clipping
+  grad_clip: 1.0  # Max gradient norm (0 = disabled)
+  grad_clip_type: norm  # Options: norm, value
+
+  # Mixed precision training (recommended)
+  use_amp: true  # Automatic Mixed Precision (FP16)
+  amp_dtype: float16  # Options: float16, bfloat16
+
+  # Gradient accumulation (simulate larger batch)
+  gradient_accumulation_steps: 1  # Set to 2-4 if batch_size must be small
+
+  # Distributed training (auto-detected if multiple GPUs)
+  use_ddp: true  # Use DistributedDataParallel
+  find_unused_parameters: false  # DDP optimization (faster)
+  ddp_backend: nccl  # Options: nccl, gloo
+
+  # Gradient checkpointing (saves memory, slower)
+  use_gradient_checkpointing: false  # Enable if OOM
+
+  # Data loading
+  num_workers: 8  # Parallel data loading threads
+  prefetch_factor: 2  # Samples to prefetch per worker
+  pin_memory: true  # Faster GPU transfer
+  persistent_workers: true  # Keep workers alive between epochs
+
+  # Validation settings
+  validate_every: 1  # Validate every N epochs
+  val_max_samples: null  # Limit validation samples (null = all)
+  save_best_wer: true  # Save checkpoint with best WER
+
+  # Checkpointing
+  save_every: 5  # Save checkpoint every N epochs
+  keep_last_n: 3  # Keep only last N checkpoints (plus best)
+  save_optimizer: true  # Save optimizer state (needed for resume)
+  save_scheduler: true  # Save LR scheduler state
+
+  # Logging
+  log_interval: 50  # Log every N steps
+  log_grad_norm: true  # Log gradient norms
+  log_param_norm: true  # Log parameter norms
+
+  # Output directories (relative to project root)
+  output_dir: outputs  # Base output directory
+  checkpoint_dir: checkpoints  # Checkpoint subdirectory
+  log_dir: logs  # Log subdirectory
+  tensorboard_dir: tensorboard  # TensorBoard subdirectory
+
+# Loss Configuration
+losses:
+  # Multi-task loss weights
+  asr_weight: 1.0  # ASR reconstruction loss
+  consensus_weight: 0.1  # Branch agreement loss
+  commitment_weight: 0.25  # Codebook commitment loss (also in model)
+  mel_weight: 0.5  # Mel reconstruction loss (TTS validation)
+
+  # Loss types
+  asr_loss_type: mse  # Options: mse, l1, smooth_l1
+  mel_loss_type: l1  # Options: l1, mse
+
+  # Consensus loss configuration
+  consensus_threshold: 0.8  # Target consensus score
+
+  # Loss balancing (advanced)
+  use_loss_balancing: false  # Automatic loss weight adjustment
+  loss_balancing_alpha: 0.1  # Speed of balancing adjustment
+
+# Evaluation Configuration
+evaluation:
+  # WER computation
+  compute_wer: true  # Compute word error rate during validation
+  wer_batch_size: 32  # Batch size for WER computation
+
+  # Metrics to track
+  track_metrics:
+    - wer  # Word error rate
+    - consensus_score  # Branch agreement
+    - mel_l1  # Mel reconstruction L1
+    - asr_mse  # ASR reconstruction MSE
+
+  # Best model selection
+  best_model_metric: wer  # Metric to use for best model (lower is better)
+
+# Hardware Configuration
+hardware:
+  # GPU settings
+  gpu_ids: null  # null = auto-detect all GPUs, or list like [0,1,2,3]
+  device: cuda  # Options: cuda, cpu (cpu not recommended)
+
+  # Memory management
+  empty_cache_every: 100  # Empty CUDA cache every N steps
+  max_memory_allocated_gb: null  # Max GPU memory (null = no limit)
+
+  # Deterministic training (slower but reproducible)
+  deterministic: false
+  seed: 42  # Random seed
+
+# Resume Training
+resume:
+  checkpoint_path: null  # Path to checkpoint (set via --resume)
+  strict_load: true  # Require exact model match
+  reset_optimizer: false  # Reset optimizer state on resume
+  reset_scheduler: false  # Reset LR scheduler on resume
+  resume_epoch: null  # Override epoch number (null = auto from checkpoint)
+
+# Debugging
+debug:
+  enabled: false  # Enable debug mode (set via --debug)
+  max_steps: null  # Max steps in debug mode (null = no limit)
+  max_samples: null  # Max samples in debug mode
+  overfit_batch: false  # Train on single batch (for debugging)
+  detect_anomaly: false  # PyTorch anomaly detection (slow)
+  profile: false  # Enable PyTorch profiler
+
+# Early Stopping (optional)
+early_stopping:
+  enabled: false  # Enable early stopping
+  patience: 10  # Epochs without improvement before stopping
+  min_delta: 0.001  # Minimum improvement to count as better
+
+# Tier-Specific Overrides
+# These override defaults when using --tier flag
+
+tier1:
+  num_epochs: 50
+  validate_every: 1
+  save_every: 5
+
+tier2:
+  num_epochs: 100
+  validate_every: 1
+  save_every: 10
+  warmup_epochs: 10
+
+# Notes:
+# - Adjust batch_size if you see OOM errors
+# - use_amp=true provides ~2x speedup with minimal quality impact
+# - num_workers should be tuned based on CPU cores (usually 4-8)
+# - For multi-GPU training, effective batch size = batch_size * num_gpus
+# - grad_clip=1.0 prevents gradient explosions, recommended for stable training

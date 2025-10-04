@@ -1,0 +1,114 @@
+# Model Configuration for Lightweight Voting-LFQ
+# Configuration for model architecture and components
+
+# Voting-LFQ Module Configuration
+voting_lfq:
+  # Input dimension from Zipformer encoder
+  input_dim: 512
+
+  # Shared base projection dimension (reduces params)
+  projection_dim: 128
+
+  # Number of voting branches (3 = optimal for robustness)
+  num_branches: 3
+
+  # Number of bits for binary quantization (2^12 = 4096 tokens)
+  num_bits: 12
+
+  # Derived: codebook size (don't change unless changing num_bits)
+  codebook_size: 4096  # 2^num_bits
+
+  # Commitment loss weight (for codebook learning)
+  commitment_weight: 0.25
+
+  # Dropout for regularization
+  dropout: 0.1
+
+  # Initialization
+  init_std: 0.02  # Standard deviation for weight initialization
+
+# Token Embedding Configuration
+embedding:
+  # Vocabulary size (must match voting_lfq.codebook_size)
+  vocab_size: 4096
+
+  # Embedding dimension (balance between capacity and size)
+  embedding_dim: 256
+
+  # Dropout
+  dropout: 0.1
+
+  # Initialization
+  init_std: 0.02
+
+# Adapter Projection Configuration
+adapter:
+  # Input dimension (from embeddings)
+  input_dim: 256
+
+  # Output dimension (match Zipformer decoder input)
+  output_dim: 512
+
+  # Use layer normalization
+  use_layer_norm: true
+
+  # Activation function
+  activation: relu  # Options: relu, gelu, silu
+
+  # Dropout
+  dropout: 0.1
+
+# Mel Decoder Configuration (for TTS validation, not exported)
+mel_decoder:
+  # Input dimension (from embeddings)
+  input_dim: 256
+
+  # Number of mel bins
+  mel_dim: 80
+
+  # Hidden dimension for decoder layers
+  hidden_dim: 512
+
+  # Number of decoder layers
+  num_layers: 2
+
+  # Use layer normalization
+  use_layer_norm: true
+
+  # Activation function
+  activation: relu
+
+  # Dropout
+  dropout: 0.1
+
+# Zipformer Configuration (for reference, loaded from checkpoint)
+zipformer:
+  # Encoder configuration (frozen during training)
+  encoder:
+    output_dim: 512  # Feature dimension
+    num_encoder_layers: 12
+    attention_dim: 512
+    num_heads: 8
+    feedforward_dim: 2048
+    # Encoder is frozen, weights loaded from checkpoint
+
+  # Decoder configuration (frozen during training)
+  decoder:
+    input_dim: 512  # Must match adapter.output_dim
+    vocab_size: 500  # BPE vocabulary size
+    num_decoder_layers: 6
+    # Decoder is frozen, weights loaded from checkpoint
+
+# Model Size Summary (for reference)
+# Component           | Parameters | FP32 Size | FP16 Size | INT8 Size
+# --------------------|-----------|-----------|-----------|----------
+# Voting-LFQ          | 1.2M      | 4.8 MB    | 2.4 MB    | ~1.2 MB
+# Token Embedding     | 1.0M      | 4.0 MB    | 2.0 MB    | ~1.0 MB
+# Adapter             | 0.13M     | 0.5 MB    | 0.25 MB   | ~0.13 MB
+# Mel Decoder (train) | 0.5M      | 2.0 MB    | 1.0 MB    | (not exported)
+# --------------------|-----------|-----------|-----------|----------
+# Total Trainable     | 2.83M     | 11.3 MB   | 5.65 MB   | ~2.8 MB
+# Total Exported      | 2.33M     | 9.3 MB    | 4.65 MB   | ~6.5 MB (with ONNX overhead)
+
+# Optimizer will be configured in training_config.yaml
+# Loss weights will be configured in training_config.yaml

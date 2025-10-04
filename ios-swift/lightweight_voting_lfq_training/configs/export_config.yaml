@@ -1,0 +1,330 @@
+# ONNX Export Configuration for Lightweight Voting-LFQ
+# Configuration for exporting trained models to ONNX format for iOS deployment
+
+# Export Settings
+export:
+  # Components to export (mel_decoder not exported - training only)
+  components:
+    - voting_lfq
+    - embedding
+    - adapter
+
+  # Output directory
+  output_dir: outputs/onnx_models
+
+  # ONNX opset version
+  # Version 14 recommended for iOS compatibility
+  # Newer versions may have better optimization but less device support
+  opset_version: 14
+
+  # Export precision
+  # Options: fp32, fp16, int8
+  # fp32: Full precision, largest size, best quality
+  # fp16: Half precision, 50% size reduction, minimal quality loss
+  # int8: 8-bit quantization, 75% size reduction, slight quality loss
+  precision: int8  # Recommended for iOS deployment
+
+  # Simplify ONNX graph (removes redundant operations)
+  simplify: true
+
+  # Optimize ONNX graph
+  optimize: true
+
+  # Enable verbose logging
+  verbose: true
+
+# Voting-LFQ Export Configuration
+voting_lfq:
+  # Export name
+  export_name: voting_lfq.onnx
+
+  # Input shape (dynamic batch and time)
+  # [batch_size, time_steps, feature_dim]
+  input_shape: [1, -1, 512]  # -1 = dynamic
+
+  # Input names (for ONNX graph)
+  input_names: [encoder_features]
+
+  # Output names
+  output_names: [tokens]
+
+  # Dynamic axes (allow variable batch/time dimensions)
+  dynamic_axes:
+    encoder_features:
+      0: batch_size
+      1: time_steps
+    tokens:
+      0: batch_size
+      1: time_steps
+
+  # Quantization settings (if precision=int8)
+  quantization:
+    # Quantization algorithm
+    algorithm: qat  # Options: qat (quantization-aware training), ptq (post-training quantization)
+
+    # Calibration samples (for PTQ)
+    calibration_samples: 100
+
+    # Per-channel quantization (better quality)
+    per_channel: true
+
+    # Quantize weights
+    quantize_weights: true
+
+    # Quantize activations
+    quantize_activations: true
+
+    # Excluded ops (don't quantize these)
+    excluded_ops: []
+
+# Embedding Export Configuration
+embedding:
+  export_name: embedding.onnx
+
+  # Input shape [batch_size, time_steps]
+  input_shape: [1, -1]
+
+  input_names: [tokens]
+
+  output_names: [embeddings]
+
+  dynamic_axes:
+    tokens:
+      0: batch_size
+      1: time_steps
+    embeddings:
+      0: batch_size
+      1: time_steps
+
+  quantization:
+    algorithm: ptq  # Post-training quantization for embedding table
+    calibration_samples: 100
+    per_channel: false  # Not applicable for embeddings
+    quantize_weights: true
+    quantize_activations: false  # Embeddings don't have activations
+
+# Adapter Export Configuration
+adapter:
+  export_name: adapter.onnx
+
+  # Input shape [batch_size, time_steps, embedding_dim]
+  input_shape: [1, -1, 256]
+
+  input_names: [embeddings]
+
+  output_names: [adapter_output]
+
+  dynamic_axes:
+    embeddings:
+      0: batch_size
+      1: time_steps
+    adapter_output:
+      0: batch_size
+      1: time_steps
+
+  quantization:
+    algorithm: qat
+    calibration_samples: 100
+    per_channel: true
+    quantize_weights: true
+    quantize_activations: true
+
+# Validation Settings
+validation:
+  # Validate ONNX export against PyTorch model
+  validate_export: true
+
+  # Number of samples to test
+  num_validation_samples: 100
+
+  # Tolerance for numerical differences
+  # FP32: 1e-5
+  # FP16: 1e-3
+  # INT8: 1e-2 (quantization introduces more error)
+  tolerance:
+    fp32: 1.0e-5
+    fp16: 1.0e-3
+    int8: 1.0e-2
+
+  # Check output shape matches
+  check_shapes: true
+
+  # Check output dtype matches expected
+  check_dtypes: true
+
+  # Validate on GPU if available
+  use_gpu: true
+
+# Optimization Settings
+optimization:
+  # ONNX optimizer passes to apply
+  passes:
+    - eliminate_identity
+    - eliminate_nop_transpose
+    - eliminate_nop_pad
+    - eliminate_unused_initializer
+    - fuse_consecutive_transposes
+    - fuse_transpose_into_gemm
+    - fuse_add_bias_into_conv
+    - fuse_bn_into_conv
+
+  # Constant folding (pre-compute static operations)
+  constant_folding: true
+
+  # Shape inference
+  shape_inference: true
+
+  # Remove unused nodes
+  remove_unused: true
+
+# iOS Specific Settings
+ios:
+  # CoreML conversion (optional, requires coremltools)
+  convert_to_coreml: false
+
+  # If converting to CoreML:
+  coreml_settings:
+    minimum_deployment_target: iOS15
+    compute_precision: Float16  # Options: Float16, Float32
+    convert_to_mlpackage: true
+
+  # ONNX Runtime Mobile optimization
+  onnx_runtime_mobile:
+    # Enable mobile optimization
+    enabled: true
+
+    # Optimization level (0-99, higher = more aggressive)
+    optimization_level: 99
+
+    # Target platform
+    platform: ios
+
+    # Target architecture
+    architecture: arm64  # For iOS devices
+
+# Model Metadata (embedded in ONNX file)
+metadata:
+  # Model description
+  description: Lightweight Voting-LFQ for noise-robust ASR tokenization
+
+  # Model version
+  version: 1.0.0
+
+  # Author
+  author: iOS ASR Project
+
+  # License
+  license: Proprietary
+
+  # Additional info
+  additional_info:
+    base_model: Zipformer-bilingual-zh-en
+    training_data: LibriSpeech + Common Voice
+    codebook_size: 4096
+    embedding_dim: 256
+    num_voting_branches: 3
+
+# Expected Output Sizes (for reference)
+expected_sizes:
+  # FP32 sizes
+  fp32:
+    voting_lfq: ~5.0 MB
+    embedding: ~4.0 MB
+    adapter: ~0.5 MB
+    total: ~9.5 MB
+
+  # FP16 sizes
+  fp16:
+    voting_lfq: ~2.5 MB
+    embedding: ~2.0 MB
+    adapter: ~0.25 MB
+    total: ~4.75 MB
+
+  # INT8 sizes (with quantization overhead)
+  int8:
+    voting_lfq: ~5.0 MB  # Includes quantization metadata
+    embedding: ~1.0 MB
+    adapter: ~0.5 MB
+    total: ~6.5 MB
+
+# Runtime Performance Targets (iPhone 12 Pro)
+performance_targets:
+  # Latency per component (milliseconds)
+  voting_lfq: 15
+  embedding: 5
+  adapter: 10
+  total_added: 30  # Added latency vs BPE
+
+  # Memory usage (MB)
+  voting_lfq: 8
+  embedding: 2
+  adapter: 1
+  total_added: 11
+
+# Testing Configuration
+testing:
+  # Test ONNX Runtime inference
+  test_onnx_runtime: true
+
+  # Test on sample audio
+  test_audio: true
+
+  # Sample audio path (for testing)
+  test_audio_path: tests/data/sample_audio.wav
+
+  # Expected test output
+  test_expected_wer: 10.0  # Maximum acceptable WER on test set
+
+  # Performance benchmarking
+  benchmark:
+    enabled: true
+    num_iterations: 100
+    warmup_iterations: 10
+    batch_sizes: [1]  # iOS typically uses batch_size=1
+
+# Export Pipeline
+pipeline:
+  # Steps to execute (in order)
+  steps:
+    - load_checkpoint       # Load PyTorch checkpoint
+    - prepare_models        # Prepare models for export
+    - export_voting_lfq     # Export Voting-LFQ to ONNX
+    - export_embedding      # Export Embedding to ONNX
+    - export_adapter        # Export Adapter to ONNX
+    - validate_exports      # Validate ONNX models
+    - optimize_models       # Optimize ONNX graphs
+    - quantize_models       # Apply INT8 quantization (if enabled)
+    - final_validation      # Final validation after quantization
+    - save_metadata         # Save model metadata
+    - benchmark_performance # Benchmark inference speed
+
+  # Stop on error
+  stop_on_error: true
+
+  # Save intermediate results
+  save_intermediate: true
+
+  # Clean intermediate files after success
+  clean_intermediate: false
+
+# Debugging
+debug:
+  # Save intermediate ONNX graphs (before optimization)
+  save_intermediate_onnx: true
+
+  # Save quantization statistics
+  save_quantization_stats: true
+
+  # Verbose ONNX export
+  verbose_export: false
+
+  # Enable ONNX checker
+  run_onnx_checker: true
+
+# Notes:
+# - INT8 quantization provides best size/quality trade-off for iOS
+# - Dynamic axes allow variable audio length at inference time
+# - Simplify + optimize can reduce model size by 10-20%
+# - Validation ensures ONNX model produces same results as PyTorch
+# - Per-channel quantization improves quality but slightly increases size
+# - ONNX Runtime Mobile optimization is highly recommended for iOS deployment
